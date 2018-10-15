@@ -1,0 +1,27 @@
+Maria Costin Bogdan
+333CB
+
+Pentru realizarea acestei teme, am modificat fisierul device.py si am adaugat fisierul barrier din laboratorul 3.
+
+Am folosit urmatoarele tipuri de threaduri: Threadurile master -> Acestea pornesc threadurile workeri
+											Threadurile worker -> Acestea sunt threadurile care lucreaza cu scripturi
+
+
+Am folosit urmatoarele tipuri de sincronizare: O bariera -> folosita pentru a sincroniza threadurile Master.Acestea deschid cate 8 threaduri si asteapta ca acestea
+															sa se termine.Astfel, unele theaduri Master se vor termina mai repede si altele mai incet.Din aceasta cauza, am pus o bariera pentru a nu lasa un thread Master sa treaca la urmatorul timepoint inainte celorlalte.
+
+												Un vector de lockuri -> folosit pentru a restrictiona accesul la o lacatie.Exista situatia in care mai multi workeri
+																		vor trebui sa lucreze cu aceasi locatie, iar din acest motiv trebuie sa nu las decat un singur thread sa lucreze cu o locatie la un moment de timp.
+
+
+												Un Event -> folosit pentru a face threadurile Mater sa astepte setup-ul.
+												Un Event -> folosit pentru a face threadurile Master sa astepte primirea tuturor scripturilor
+												2 Lockuri -> folosit pentru a nu lasa mai multe threaduri sa faca citiri sau scrieri din sensor_data
+
+
+Programul functioneaza in modul urmator:
+
+	Prima data se apeleaza functie setup_devices. M-am gandit ca toate threadurile trebuie sa aiba un vector de lockuri(explicat mai sus) si o bariera comuna, de aceea a trebuit sa consider un device "Master"(cel cu id-ul 0) care va construi aceste lucruri, iar restul device-urilor vor primi aceste mecanisme de sincronizare.Dupa, dau set din fiecare device la Event-ul "setup", al carui rol este sa faca metoda run(specifica thread-urilor Master) sa astepte setup-ul.In metoda run intru intr-o bucla while, din care voi iesi in momentul in care primesc None de la metoda get_neighbours()(adica am terminat timepoint-urile).Dupa ce am primti lista de vecini, creez workeri, al caror rol este sa obtina datele necesare. Fiecarui worker ii este pasat un index, care reprezinta indexul din vectorul de scripturi pe care trebuie sa il ruleze.Apoi, pornesc cate 8 threaduri worker.Daca numarul de scripturi este mai mare ca 8, astept ca primele 8 sa se termine dupa care dau start la alte threaduri care se vor ocupa de restul script-urilor.La sfarsit, thread-urile Master vor ajunge la bariera, al carei rol este sa faca toate aceste threaduri sa treaca simultan la urmatorul timepoint. In metoda run() din clasa MyThread, dau un acquire pe locatie(explicat mai sus de ce), dupa care fac operatiile din schelet(adun datele de la vecini, rulez script-ul pe aceste date si pe ale mele, dupa care pasez mai departe noile date veciniilor).
+
+
+
